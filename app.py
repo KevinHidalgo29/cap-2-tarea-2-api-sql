@@ -1,12 +1,12 @@
 import sqlite3
-from flask import Flask, render_template, abort, request, url_for
-# from db import get_db_connection
+from flask import Flask, render_template, abort, request, url_for, redirect
+from db import get_db_connection  # Asegúrate de que esta función está definida
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def index():
-        return render_template('index.html')
+    return render_template('index.html')
 
 @app.route('/home', methods=['GET'])
 def home():
@@ -15,7 +15,7 @@ def home():
 @app.route('/post', methods=['GET'])
 def get_all_post():
     conn = get_db_connection()
-    posts = conn.execute('SELECT * FROM posts').fetchone()
+    posts = conn.execute('SELECT * FROM posts').fetchall()  # Cambié fetchone() por fetchall()
     conn.close()
     return render_template('post/posts.html', posts=posts)
 
@@ -32,13 +32,12 @@ def create_one_post():
         title = request.form['title']
         contend = request.form['contend']
         conn = get_db_connection()
-        conn.execute('INSERT INTO posts (title, content) VALUES (?, !)', (title, contend))
+        conn.execute('INSERT INTO posts (title, content) VALUES (?, ?)', (title, contend))
         conn.commit()
         conn.close()
-        return redirect(url_for('/post'))
+        return redirect(url_for('get_all_post'))  # Cambié aquí
 
     return render_template('post/create.html')
-
 
 @app.route('/post/edit/<int:id>', methods=['GET', 'POST'])
 def edit_one_post(id):
@@ -59,16 +58,14 @@ def edit_one_post(id):
     elif request.method == 'GET':
         return render_template('post/edit.html', post=post)
 
-
-@app.route('/post/delete/<str:post_id>', methods=['POST'])
+@app.route('/post/delete/<int:post_id>', methods=['POST'])  # Cambié a <int:post_id>
 def delete_one_post(post_id):
     conn = get_db_connection()
-    conn.execute('DELETE FROM posts WHERE id = ?', (post_id))
+    conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))  # Añadí la coma
     conn.commit()
     conn.close()
 
-    return redirect(url_for('get_all_post')
+    return redirect(url_for('get_all_post'))  # Añadí el paréntesis de cierre
 
 if __name__ == '__main__':
-    app.run(debug=True, port=80, host=)
-########################################################################## END BLOQUE 2
+    app.run(debug=True, port=80, host='0.0.0.0')  # Especifica el host
